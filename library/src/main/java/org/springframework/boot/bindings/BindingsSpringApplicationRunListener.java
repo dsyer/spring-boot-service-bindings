@@ -6,11 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.boot.logging.DeferredLogFactory;
+import org.springframework.boot.SpringApplicationRunListener;
 import org.springframework.cloud.bindings.Binding;
 import org.springframework.cloud.bindings.Bindings;
 import org.springframework.cloud.bindings.boot.AwkwardEnvironmentPostProcessor;
@@ -18,25 +16,24 @@ import org.springframework.cloud.bindings.boot.BindingsPropertiesProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 
-public class BindingsEnvironmentPostProcessor implements EnvironmentPostProcessor {
+public class BindingsSpringApplicationRunListener implements SpringApplicationRunListener {
 
-	private final Log log;
-	private final ConfigurableBootstrapContext context;
+	private final SpringApplication application;
 
-	public BindingsEnvironmentPostProcessor(DeferredLogFactory logs, ConfigurableBootstrapContext context) {
-		this.context = context;
-		this.log = logs.getLog(BindingsEnvironmentPostProcessor.class);
+	public BindingsSpringApplicationRunListener(SpringApplication application, String[] args) {
+		this.application = application;
 	}
 
 	@Override
-	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+	public void environmentPrepared(ConfigurableBootstrapContext context,
+			ConfigurableEnvironment environment) {
 		List<BindingsPropertiesProcessor> processors = SpringFactoriesLoader
 				.loadFactories(BindingsPropertiesProcessor.class, getClass().getClassLoader());
-		Bindings bindings = new Bindings(bindings(environment));
+		Bindings bindings = new Bindings(bindings(context, environment));
 		new AwkwardEnvironmentPostProcessor(bindings, processors).postProcessEnvironment(environment, application);
 	}
 
-	private Binding[] bindings(ConfigurableEnvironment environment) {
+	private Binding[] bindings(ConfigurableBootstrapContext context, ConfigurableEnvironment environment) {
 		SecretsBindings secrets = new SecretsBindings(context, environment);
 		List<StrippedSourceContainer> sources = secrets.load();
 		List<Binding> bindings = new ArrayList<>();
@@ -48,7 +45,6 @@ public class BindingsEnvironmentPostProcessor implements EnvironmentPostProcesso
 				}
 			}
 		}
-		log.info("Bindings: " + bindings);
 		return bindings.toArray(new Binding[0]);
 	}
 

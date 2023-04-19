@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.ConfigurableEnvironment;
 
-@SpringBootTest(properties={"spring.cloud.kubernetes.client.namespace=default"})
+@SpringBootTest
 public class DemoApplicationTests {
 
 	@Autowired

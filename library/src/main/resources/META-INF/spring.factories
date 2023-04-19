@@ -1,2 +1,2 @@
-org.springframework.boot.env.EnvironmentPostProcessor=\
-  org.springframework.boot.bindings.BindingsEnvironmentPostProcessor
+org.springframework.boot.SpringApplicationRunListener=\
+  org.springframework.boot.bindings.BindingsSpringApplicationRunListener

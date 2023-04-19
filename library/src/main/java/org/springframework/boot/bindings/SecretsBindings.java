@@ -25,7 +25,7 @@ public class SecretsBindings {
 		context.registerIfAbsent(ApiClient.class, InstanceSupplier.from(SecretsBindings::kubernetesApiClient));
 		context.registerIfAbsent(CoreV1Api.class, InstanceSupplier.from(() -> new CoreV1Api(context.get(ApiClient.class))));
 		String namespace = Binder.get(environment)
-				.bind("spring.cloud.kubernetes.secrets.namespace", String.class).orElse("default");
+				.bind("spring.cloud.kubernetes.client.namespace", String.class).orElse("default");
 		return strippedSecrets(context.get(CoreV1Api.class), namespace);
 	}
 

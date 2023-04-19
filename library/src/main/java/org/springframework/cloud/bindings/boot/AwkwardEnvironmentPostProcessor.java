@@ -4,11 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.cloud.bindings.Bindings;
 import org.springframework.core.env.ConfigurableEnvironment;
 
-public class AwkwardEnvironmentPostProcessor implements EnvironmentPostProcessor {
+public class AwkwardEnvironmentPostProcessor {
 
 	private final Bindings bindings;
 	private final List<BindingsPropertiesProcessor> processors;
@@ -18,7 +17,6 @@ public class AwkwardEnvironmentPostProcessor implements EnvironmentPostProcessor
 		this.processors = processors;
 	}
 
-	@Override
 	public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
 		PropertySourceContributor.contributePropertySource("global",
 				Map.of("org.springframework.cloud.bindings.boot.enable", "true"), environment);
