@@ -15,7 +15,6 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Secret;
-import io.kubernetes.client.util.ClientBuilder;
 
 public class SecretsBindings {
 
@@ -28,8 +27,9 @@ public class SecretsBindings {
 	}
 
 	public List<StrippedSourceContainer> load() {
-		context.registerIfAbsent(ApiClient.class, InstanceSupplier.from(SecretsBindings::kubernetesApiClient));
-		context.registerIfAbsent(CoreV1Api.class, InstanceSupplier.from(() -> new CoreV1Api(context.get(ApiClient.class))));
+		context.registerIfAbsent(ApiClient.class, InstanceSupplier.from(ClientUtils::kubernetesApiClient));
+		context.registerIfAbsent(CoreV1Api.class,
+				InstanceSupplier.from(() -> new CoreV1Api(context.get(ApiClient.class))));
 		String namespace = Binder.get(environment)
 				.bind("spring.cloud.kubernetes.client.namespace", String.class).orElse("default");
 		return strippedSecrets(context.get(CoreV1Api.class), namespace);
@@ -38,23 +38,6 @@ public class SecretsBindings {
 	private static List<StrippedSourceContainer> strippedSecrets(CoreV1Api coreV1Api, String namespace) {
 		List<StrippedSourceContainer> strippedSecrets = KubernetesClientSecretsCache.byNamespace(coreV1Api, namespace);
 		return strippedSecrets;
-	}
-
-	private static ApiClient kubernetesApiClient() {
-		try {
-			// Assume we are running in a cluster
-			ApiClient apiClient = ClientBuilder.cluster().build();
-			return apiClient;
-		}
-		catch (Exception e) {
-			try {
-				ApiClient apiClient = ClientBuilder.defaultClient();
-				return apiClient;
-			}
-			catch (Exception e1) {
-				return new ClientBuilder().build();
-			}
-		}
 	}
 
 }
