@@ -9,8 +9,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>library</module>
-        <module>application</module>
+        <module>spring-boot-bindings</module>
+        <module>sample</module>
     </modules>
 
 </project>
