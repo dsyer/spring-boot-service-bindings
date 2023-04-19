@@ -1,4 +1,4 @@
-package org.springframework.cloud.kubernetes.client.config;
+package org.springframework.boot.bindings;
 
 import java.util.Map;
 

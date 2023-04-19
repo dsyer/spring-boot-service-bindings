@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.kubernetes.client.config;
+package org.springframework.boot.bindings;
 
 import java.util.List;
 import java.util.Map;

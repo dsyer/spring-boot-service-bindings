@@ -15,8 +15,6 @@ import org.springframework.cloud.bindings.Binding;
 import org.springframework.cloud.bindings.Bindings;
 import org.springframework.cloud.bindings.boot.AwkwardEnvironmentPostProcessor;
 import org.springframework.cloud.bindings.boot.BindingsPropertiesProcessor;
-import org.springframework.cloud.kubernetes.client.config.SecretsBindings;
-import org.springframework.cloud.kubernetes.client.config.StrippedSourceContainer;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 
