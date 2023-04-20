@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.util.ReflectionUtils;
 
@@ -27,8 +28,6 @@ import io.kubernetes.client.util.labels.LabelSelector;
 public class Pods {
 
 	private final CoreV1Api api;
-
-	private Collection<ServerSocket> servers = new ArrayList<>();
 
 	public Pods(CoreV1Api api) {
 		this.api = api;
@@ -52,73 +51,8 @@ public class Pods {
 
 		ApiClient client = api.getApiClient();
 		PortForward forward = new PortForward(client);
-		List<Integer> ports = Arrays.asList(targetPort);
+		return new RemoteService(forward, pod, targetPort).start();
 
-		final ServerSocket server = new ServerSocket(0);
-		servers.add(server);
-		int localPort = server.getLocalPort();
-
-		new Thread(() ->
-
-		{
-
-			boolean running = true;
-			while (running) {
-
-				try (final Socket socket = server.accept()) {
-					final PortForward.PortForwardResult result = forward.forward(pod.getMetadata().getNamespace(),
-							pod.getMetadata().getName(), ports);
-
-					new Thread(
-							() -> {
-								try {
-									Pods.copy(result.getInputStream(targetPort), socket.getOutputStream());
-								} catch (Exception ex) {
-									ex.printStackTrace();
-								}
-							}, pod.getMetadata().getName() + " (" + targetPort + ":" + localPort + ") - input ")
-							.start();
-
-					try {
-						Pods.copy(socket.getInputStream(), result.getOutboundStream(targetPort));
-					} catch (Exception ex) {
-						ex.printStackTrace();
-					}
-
-					close(socket, result, targetPort);
-				} catch (Exception e) {
-					running = false;
-				}
-
-			}
-
-		}, "localhost:" + pod.getMetadata().getName() + ":" + localPort).start();
-
-		return new RemoteService(server, localPort);
-	}
-
-	private void close(Socket socket, final PortForward.PortForwardResult result, int target) {
-		try {
-			result.getInputStream(target).close();
-			Field field = ReflectionUtils.findField(PortForwardResult.class, "handler");
-			field.setAccessible(true);
-			WebSocketStreamHandler handler = (WebSocketStreamHandler) field.get(result);
-			handler.close();
-			socket.close();
-		} catch (Exception e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
-	private static final int BUFFER_SIZE = 4096;
-
-	private static void copy(InputStream in, OutputStream out) throws IOException {
-		byte[] buffer = new byte[BUFFER_SIZE];
-		int bytesRead;
-		while ((bytesRead = in.read(buffer)) != -1) {
-			out.write(buffer, 0, bytesRead);
-		}
-		out.flush();
 	}
 
 }
