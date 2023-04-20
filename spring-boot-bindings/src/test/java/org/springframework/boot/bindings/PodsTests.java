@@ -11,8 +11,21 @@ public class PodsTests {
 
 	@Test
 	void testPods() throws Exception {
+		Pods pods = pods();
+		assertThat(pods.forService("default", "demo-db")).isNotEmpty();
+	}
+
+	private static Pods pods() {
 		ApiClient client = ClientUtils.kubernetesApiClient();
 		CoreV1Api api = new CoreV1Api(client);
-		assertThat(new Pods(api).forService("default", "demo-db")).isNotEmpty();
+		Pods pods = new Pods(api);
+		return pods;
+	}
+
+	public static void main(String[] args) throws Exception {
+		Pods pods = pods();
+		RemoteService forward = pods.portForward(pods.forService("default", "demo-db").get(0), 3306);
+		System.err.println(forward);
+		forward.close();
 	}
 }
