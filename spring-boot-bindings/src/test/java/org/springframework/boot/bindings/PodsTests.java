@@ -9,10 +9,12 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 
 public class PodsTests {
 
+	private static String namespace = ClientUtils.config().getNamespace();
+
 	@Test
 	void testPods() throws Exception {
 		Pods pods = pods();
-		assertThat(pods.forService("default", "demo-db")).isNotEmpty();
+		assertThat(pods.forService(namespace, "demo-db")).isNotEmpty();
 	}
 
 	private static Pods pods() {
@@ -24,10 +26,10 @@ public class PodsTests {
 
 	public static void main(String[] args) throws Exception {
 		Pods pods = pods();
-		RemoteService forward = pods.portForward(pods.forService("default", "demo-db").get(0), 3306);
+		RemoteService forward = pods.portForward(pods.forService("my-apps", "demo-db").get(0), 3306);
 		System.err.println(forward);
 		forward.close();
-		forward = pods.portForward(pods.forService("default", "demo-db").get(0), 3306);
+		forward = pods.portForward(pods.forService("my-apps", "demo-db").get(0), 3306);
 		System.err.println(forward);
 		forward.close();
 	}

@@ -16,11 +16,13 @@ import org.springframework.cloud.bindings.Bindings;
 import org.springframework.cloud.bindings.boot.AwkwardEnvironmentPostProcessor;
 import org.springframework.cloud.bindings.boot.BindingsPropertiesProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.util.KubeConfig;
 
 public class BindingsSpringApplicationRunListener implements SpringApplicationRunListener {
 
@@ -44,9 +46,18 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 		new AwkwardEnvironmentPostProcessor(bindings, processors).postProcessEnvironment(environment, application);
 	}
 
+	private static String namespace(Environment environment) {
+		KubeConfig config = ClientUtils.config();
+		String namespace = config==null ? "default" : config.getNamespace();
+		return Binder.get(environment)
+				.bind("spring.cloud.kubernetes.client.namespace", String.class)
+				.orElse(Binder.get(environment)
+						.bind("pod.namespace", String.class)
+						.orElse(namespace));
+	}
+
 	private Binding[] bindings(ConfigurableBootstrapContext context, ConfigurableEnvironment environment) {
-		String namespace = Binder.get(environment)
-				.bind("spring.cloud.kubernetes.client.namespace", String.class).orElse("default");
+		String namespace = namespace(environment);
 		SecretsBindings secrets = new SecretsBindings(context, namespace);
 		List<StrippedSourceContainer> sources = secrets.load();
 		List<Binding> bindings = new ArrayList<>();
@@ -75,7 +86,7 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 				secret.put("host", "localhost");
 				secret.put("port", "" + remote.getLocalPort());
 				secret.put("type", binding.getType());
-				if (binding.getProvider()!=null) {
+				if (binding.getProvider() != null) {
 					secret.put("provider", binding.getProvider());
 				}
 				binding = new Binding(binding.getName(), binding.getPath(), secret);
