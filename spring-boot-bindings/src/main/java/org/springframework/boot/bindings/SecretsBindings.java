@@ -5,13 +5,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.springframework.boot.BootstrapRegistry.InstanceSupplier;
 import org.springframework.boot.ConfigurableBootstrapContext;
-import org.springframework.boot.context.properties.bind.Binder;
-import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.ObjectUtils;
 
-import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Secret;
@@ -19,19 +15,14 @@ import io.kubernetes.client.openapi.models.V1Secret;
 public class SecretsBindings {
 
 	private final ConfigurableBootstrapContext context;
-	private final ConfigurableEnvironment environment;
+	private final String namespace;
 
-	public SecretsBindings(ConfigurableBootstrapContext context, ConfigurableEnvironment environment) {
+	public SecretsBindings(ConfigurableBootstrapContext context, String namespace) {
 		this.context = context;
-		this.environment = environment;
+		this.namespace = namespace;
 	}
 
 	public List<StrippedSourceContainer> load() {
-		context.registerIfAbsent(ApiClient.class, InstanceSupplier.from(ClientUtils::kubernetesApiClient));
-		context.registerIfAbsent(CoreV1Api.class,
-				InstanceSupplier.from(() -> new CoreV1Api(context.get(ApiClient.class))));
-		String namespace = Binder.get(environment)
-				.bind("spring.cloud.kubernetes.client.namespace", String.class).orElse("default");
 		return strippedSecrets(context.get(CoreV1Api.class), namespace);
 	}
 

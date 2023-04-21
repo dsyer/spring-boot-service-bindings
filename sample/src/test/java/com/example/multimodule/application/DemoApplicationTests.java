@@ -15,6 +15,7 @@ public class DemoApplicationTests {
 
 	@Test
 	public void contextLoads() {
+		System.err.println(environment.getProperty("spring.datasource.url"));
 		assertThat(environment.getProperty("spring.datasource.url")).isNotNull();
 	}
 

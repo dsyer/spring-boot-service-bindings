@@ -1,28 +1,15 @@
 package org.springframework.boot.bindings;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.springframework.util.ReflectionUtils;
 
 import io.kubernetes.client.PortForward;
-import io.kubernetes.client.PortForward.PortForwardResult;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
-import io.kubernetes.client.util.WebSocketStreamHandler;
 import io.kubernetes.client.util.labels.LabelSelector;
 
 public class Pods {

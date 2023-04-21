@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import io.kubernetes.client.PortForward;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.util.ClientBuilder;
 
 public class PodsTests {
 
@@ -25,6 +27,9 @@ public class PodsTests {
 	public static void main(String[] args) throws Exception {
 		Pods pods = pods();
 		RemoteService forward = pods.portForward(pods.forService("default", "demo-db").get(0), 3306);
+		System.err.println(forward);
+		forward.close();
+		forward = pods.portForward(pods.forService("default", "demo-db").get(0), 3306);
 		System.err.println(forward);
 		forward.close();
 	}
