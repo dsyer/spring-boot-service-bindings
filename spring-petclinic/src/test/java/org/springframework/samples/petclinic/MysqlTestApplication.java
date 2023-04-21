@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
- package org.springframework.samples.petclinic;
+package org.springframework.samples.petclinic;
 
- import org.springframework.boot.SpringApplication;
- 
- /**
-  * PetClinic Spring Boot Application.
-  *
-  * @author Dave Syer
-  *
-  */
- public class MysqlTestApplication {
- 
-	 public static void main(String[] args) {
-		 SpringApplication.run(PetClinicApplication.class, "--spring.profiles.active=mysql");
-	 }
- 
- }
- 
+import org.springframework.boot.SpringApplication;
+
+/**
+ * PetClinic Spring Boot Application.
+ *
+ * @author Dave Syer
+ *
+ */
+public class MysqlTestApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(PetClinicApplication.class, "--spring.profiles.active=mysql");
+	}
+
+}
