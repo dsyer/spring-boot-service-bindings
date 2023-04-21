@@ -34,6 +34,7 @@ public class Pods {
 				null, null).getItems();
 	}
 
+	@SuppressWarnings("resource")
 	public RemoteService portForward(V1Pod pod, int targetPort) throws ApiException, IOException {
 
 		ApiClient client = api.getApiClient();
