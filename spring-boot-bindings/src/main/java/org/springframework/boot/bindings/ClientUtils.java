@@ -44,12 +44,19 @@ public class ClientUtils {
 				}
 			}
 		} catch (Exception e) {
-
 		}
-		KubeConfig config = new KubeConfig(
-				new ArrayList<>(Arrays.asList(Map.of("name", "context", "namespace", "default"))), new ArrayList<>(),
-				new ArrayList<>());
+		KubeConfig config = defaultConfig();
 
+		return config;
+	}
+
+	static KubeConfig defaultConfig() {
+		KubeConfig config = new KubeConfig(
+				new ArrayList<>(Arrays.asList(Map.of("name", "context", "context",
+						Map.of("namespace", "default")))),
+				new ArrayList<>(),
+				new ArrayList<>());
+		config.setContext("context");
 		return config;
 	}
 
