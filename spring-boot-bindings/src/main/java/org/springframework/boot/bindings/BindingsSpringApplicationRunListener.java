@@ -48,7 +48,7 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 
 	private static String namespace(Environment environment) {
 		KubeConfig config = ClientUtils.config();
-		String namespace = config==null ? "default" : config.getNamespace();
+		String namespace = config==null ? "default" : (config.getNamespace() == null ? "default" : config.getNamespace());
 		return Binder.get(environment)
 				.bind("spring.cloud.kubernetes.client.namespace", String.class)
 				.orElse(Binder.get(environment)

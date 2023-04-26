@@ -9,7 +9,8 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 
 public class PodsTests {
 
-	private static String namespace = ClientUtils.config().getNamespace();
+	private static String namespace = ClientUtils.config().getNamespace() == null ? "default"
+			: ClientUtils.config().getNamespace();
 
 	@Test
 	void testPods() throws Exception {

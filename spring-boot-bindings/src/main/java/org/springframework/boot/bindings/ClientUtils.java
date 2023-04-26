@@ -40,7 +40,8 @@ public class ClientUtils {
 			}
 			if (config != null) {
 				try (FileReader reader = new FileReader(config)) {
-					return KubeConfig.loadKubeConfig(reader);
+					KubeConfig kubeConfig = KubeConfig.loadKubeConfig(reader);
+					return kubeConfig;
 				}
 			}
 		} catch (Exception e) {
