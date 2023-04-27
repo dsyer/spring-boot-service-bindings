@@ -40,15 +40,19 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 		context.registerIfAbsent(ApiClient.class, InstanceSupplier.from(ClientUtils::kubernetesApiClient));
 		context.registerIfAbsent(CoreV1Api.class,
 				InstanceSupplier.from(() -> new CoreV1Api(context.get(ApiClient.class))));
+		Bindings bindings = new Bindings(bindings(context, environment));
+		if (bindings.getBindings().isEmpty()) {
+			return;
+		}
 		SpringApplication.getShutdownHandlers()
 				.add(() -> context.get(ApiClient.class).getHttpClient().dispatcher().executorService().shutdown());
-		Bindings bindings = new Bindings(bindings(context, environment));
 		new AwkwardEnvironmentPostProcessor(bindings, processors).postProcessEnvironment(environment, application);
 	}
 
 	private static String namespace(Environment environment) {
 		KubeConfig config = ClientUtils.config();
-		String namespace = config==null ? "default" : (config.getNamespace() == null ? "default" : config.getNamespace());
+		String namespace = config == null ? "default"
+				: (config.getNamespace() == null ? "default" : config.getNamespace());
 		return Binder.get(environment)
 				.bind("spring.cloud.kubernetes.client.namespace", String.class)
 				.orElse(Binder.get(environment)
@@ -77,10 +81,22 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 		Map<String, String> secret = new HashMap<>(binding.getSecret());
 		if (secret.containsKey("host") && secret.containsKey("port")) {
 			String host = secret.get("host");
+			// Small hack for service claims in TAP where the owner is the namespace
+			if (host.matches("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")) {
+				if (binding.getSecret().get("owner") != null) {
+					String owner = binding.getSecret().get("owner");
+					namespace = owner;
+					host = owner;
+				}
+			}
 			int port = Integer.parseInt(secret.get("port"));
 			Pods pods = new Pods(context.get(CoreV1Api.class));
 			try {
 				V1Pod pod = pods.forService(namespace, host).get(0);
+				if (pod==null) {
+					// can't find pod
+					return binding;
+				}
 				RemoteService remote = pods.portForward(pod, port);
 				SpringApplication.getShutdownHandlers().add(() -> remote.close());
 				secret.put("host", "localhost");
@@ -100,6 +116,9 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 		Map<String, String> map = new HashMap<>((Map<String, String>) source.data());
 		if (!map.containsKey("type")) {
 			return null;
+		}
+		if (source.owner() != null) {
+			map.put("owner", source.owner().getName());
 		}
 		return new Binding(source.name(), Path.of(source.name()), map);
 	}
