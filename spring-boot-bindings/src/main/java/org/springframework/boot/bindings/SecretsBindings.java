@@ -10,7 +10,6 @@ import org.springframework.util.ObjectUtils;
 
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1Secret;
 
 public class SecretsBindings {
@@ -56,15 +55,7 @@ class KubernetesClientSecretsCache {
 	}
 
 	private static List<StrippedSourceContainer> strippedSecrets(List<V1Secret> secrets) {
-		return secrets.stream().map(secret -> new StrippedSourceContainer(owner(secret), secret.getMetadata().getLabels(),
-				secret.getMetadata().getName(), transform(secret.getData()))).collect(Collectors.toList());
-	}
-
-	private static V1OwnerReference owner(V1Secret secret) {
-		if (secret.getMetadata().getOwnerReferences() != null && !secret.getMetadata().getOwnerReferences().isEmpty()) {
-			return secret.getMetadata().getOwnerReferences().get(0);
-		}
-		return null;
+		return secrets.stream().map(secret -> new StrippedSourceContainer(secret.getMetadata(), transform(secret.getData()))).collect(Collectors.toList());
 	}
 
 	private static Map<String, String> transform(Map<String, byte[]> in) {
