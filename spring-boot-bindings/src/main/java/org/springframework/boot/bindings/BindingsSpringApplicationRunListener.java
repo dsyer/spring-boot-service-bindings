@@ -77,8 +77,7 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 				if (binding != null) {
 					if (source.owner() != null) {
 						dict.computeIfAbsent(source.owner(), owner -> new ArrayList<>()).add(source);
-					}
-					else {
+					} else {
 						bindings.add(source);
 					}
 				}
@@ -111,51 +110,64 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 		Map<String, String> secret = new HashMap<>(source.data());
 		if (secret.containsKey("host") && secret.containsKey("port")) {
 			String host = secret.get("host");
-			// Small hack for bitnami service claims where the owner is the namespace
-			if (host.matches("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")) {
+			try {
+				InetAddress.getByName(host);
+				// If it's resolvable it must be OK not to forward
+				return binding;
+			} catch (UnknownHostException e) {
+			}
+			if (!host.contains(".")) {
+				// A service name in the default namespace
+				host = host + "." + namespace;
+				try {
+					// Might be resolvable (in cluster or with telepresence)
+					InetAddress.getByName(host);
+					return binding(binding, host, secret.get("port"));
+				} catch (UnknownHostException e) {
+				}
+			}
+			// Tiny hack for service claims where the namespace is included in the host
+			if (host.matches(".*\\.svc.*") || StringUtils.countOccurrencesOf(host, ".") == 1) {
+				String[] tokens = host.split("\\.");
+				if (tokens.length > 1) {
+					namespace = tokens[1];
+					host = tokens[0];
+				}
+			} else if (host.matches("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")) {
+				// Small hack for bitnami service claims where the owner is the namespace
 				if (source.owner() != null) {
 					String owner = source.owner().getName();
 					namespace = owner;
 					host = owner;
 				}
-			}
-			// Smaller hack for service claims where the namespace is included in the host
-			if (host.matches(".*\\.svc.*") || StringUtils.countOccurrencesOf(host, ".") == 1) {
-				try {
-					InetAddress.getByName(host);
-					// If it's resolvable it must be OK not to forward
-					return binding;
-				}
-				catch (UnknownHostException e) {
-					String[] tokens = host.split("\\.");
-					if (tokens.length > 1) {
-						namespace = tokens[1];
-						host = tokens[0];
-					}
-				}
+
 			}
 			int port = Integer.parseInt(secret.get("port"));
 			Pods pods = new Pods(context.get(CoreV1Api.class));
 			try {
 				V1Pod pod = pods.forService(namespace, host).get(0);
 				if (pod == null) {
-					// can't find pod
+					// Can't find pod
 					return binding;
 				}
 				RemoteService remote = pods.portForward(pod, port);
 				SpringApplication.getShutdownHandlers().add(() -> remote.close());
-				secret.put("host", "localhost");
-				secret.put("port", "" + remote.getLocalPort());
-				secret.put("type", binding.getType());
-				if (binding.getProvider() != null) {
-					secret.put("provider", binding.getProvider());
-				}
-				binding = new Binding(binding.getName(), binding.getPath(), secret);
-			}
-			catch (Exception e) {
+				binding = binding(binding, "localhost", "" + remote.getLocalPort());
+			} catch (Exception e) {
 			}
 		}
 		return binding;
+	}
+
+	private Binding binding(Binding binding, String host, String port) {
+		Map<String, String> secret = new HashMap<>(binding.getSecret());
+		secret.put("host", host);
+		secret.put("port", port);
+		secret.put("type", binding.getType());
+		if (binding.getProvider() != null) {
+			secret.put("provider", binding.getProvider());
+		}
+		return new Binding(binding.getName(), binding.getPath(), secret);
 	}
 
 	private Binding binding(StrippedSourceContainer source) {
