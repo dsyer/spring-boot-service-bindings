@@ -20,8 +20,10 @@ public class AwkwardEnvironmentPostProcessorTests {
 	void testPostProcessEnvironment() {
 		ConfigurableEnvironment environment = new StandardEnvironment();
 		SpringApplication application = new SpringApplication();
-		List<BindingsPropertiesProcessor> processors = SpringFactoriesLoader.loadFactories(BindingsPropertiesProcessor.class, getClass().getClassLoader());
-		Bindings bindings = new Bindings(new Binding("test", Path.of("test"), Map.of("type", "mysql", "username", "root", "password", "root", "host", "localhost", "port", "3306", "database", "mysql")));
+		List<BindingsPropertiesProcessor> processors = SpringFactoriesLoader
+				.loadFactories(BindingsPropertiesProcessor.class, getClass().getClassLoader());
+		Bindings bindings = new Bindings(new Binding("test", Path.of("test"), Map.of("type", "mysql", "username",
+				"root", "password", "root", "host", "localhost", "port", "3306", "database", "mysql")));
 		new AwkwardEnvironmentPostProcessor(bindings, processors).postProcessEnvironment(environment, application);
 		// System.err.println(environment.getProperty("spring.datasource.url"));
 		assertThat(environment.getProperty("spring.datasource.url")).isNotNull();

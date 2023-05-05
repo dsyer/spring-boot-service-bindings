@@ -27,7 +27,8 @@ import org.springframework.boot.SpringApplication;
 public class MysqlTestApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(PetClinicApplication.class, "--spring.profiles.active=mysql");
+		SpringApplication.run(PetClinicApplication.class, "--spring.profiles.active=mysql",
+				"--spring.service-bindings.enabled=true");
 	}
 
 }

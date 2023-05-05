@@ -10,6 +10,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 public class AwkwardEnvironmentPostProcessor {
 
 	private final Bindings bindings;
+
 	private final List<BindingsPropertiesProcessor> processors;
 
 	public AwkwardEnvironmentPostProcessor(Bindings bindings, List<BindingsPropertiesProcessor> processors) {

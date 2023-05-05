@@ -21,12 +21,19 @@ import io.kubernetes.client.util.WebSocketStreamHandler;
 public class RemoteService implements Closeable {
 
 	private ServerSocket server;
+
 	private int localPort;
+
 	private AtomicBoolean running = new AtomicBoolean();
+
 	private AtomicReference<Current> current = new AtomicReference<>();
+
 	private final PortForward forward;
+
 	private final int targetPort;
+
 	private final String namespace;
+
 	private final String name;
 
 	public RemoteService(PortForward forward, V1Pod pod, int targetPort) {
@@ -50,16 +57,17 @@ public class RemoteService implements Closeable {
 		}
 		try {
 			server.close();
-		} catch (Exception ex) {
+		}
+		catch (Exception ex) {
 			throw new IllegalStateException(ex);
-		} finally {
+		}
+		finally {
 		}
 	}
 
 	@Override
 	public String toString() {
-		return "RemoteService[pod: " + name + ", localPort: " + localPort + ", targetPort: "
-				+ targetPort + "]";
+		return "RemoteService[pod: " + name + ", localPort: " + localPort + ", targetPort: " + targetPort + "]";
 	}
 
 	public RemoteService start() {
@@ -70,7 +78,8 @@ public class RemoteService implements Closeable {
 
 		try {
 			server = new ServerSocket(0);
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new IllegalStateException(e);
 		}
 		localPort = server.getLocalPort();
@@ -81,8 +90,7 @@ public class RemoteService implements Closeable {
 			while (running.get()) {
 
 				try (Socket socket = server.accept()) {
-					PortForward.PortForwardResult result = forward.forward(namespace,
-							name, Arrays.asList(targetPort));
+					PortForward.PortForwardResult result = forward.forward(namespace, name, Arrays.asList(targetPort));
 					if (result == null) {
 						throw new RuntimeException("PortForward failed!");
 					}
@@ -90,28 +98,28 @@ public class RemoteService implements Closeable {
 					OutputStream out = result.getOutboundStream(targetPort);
 					current.set(new Current(result, socket));
 
-					Thread output = new Thread(
-							() -> {
-								try {
-									RemoteService.copy(socket.getInputStream(), out);
-								} catch (Exception ex) {
-									if (!socket.isClosed()) {
-										ex.printStackTrace();
-									}
-								}
-							}, name + " (" + targetPort + ":" + localPort + ") - output ");
+					Thread output = new Thread(() -> {
+						try {
+							RemoteService.copy(socket.getInputStream(), out);
+						}
+						catch (Exception ex) {
+							if (!socket.isClosed()) {
+								ex.printStackTrace();
+							}
+						}
+					}, name + " (" + targetPort + ":" + localPort + ") - output ");
 					output.start();
 
-					Thread input = new Thread(
-							() -> {
-								try {
-									RemoteService.copy(in, socket.getOutputStream());
-								} catch (Exception ex) {
-									if (!socket.isClosed()) {
-										ex.printStackTrace();
-									}
-								}
-							}, name + " (" + targetPort + ":" + localPort + ") - input ");
+					Thread input = new Thread(() -> {
+						try {
+							RemoteService.copy(in, socket.getOutputStream());
+						}
+						catch (Exception ex) {
+							if (!socket.isClosed()) {
+								ex.printStackTrace();
+							}
+						}
+					}, name + " (" + targetPort + ":" + localPort + ") - input ");
 					input.start();
 
 					output.join();
@@ -120,7 +128,8 @@ public class RemoteService implements Closeable {
 
 					closeCurrent();
 
-				} catch (Exception e) {
+				}
+				catch (Exception e) {
 					running.set(false);
 				}
 
@@ -139,24 +148,28 @@ public class RemoteService implements Closeable {
 			if (!current.get().socket().isClosed()) {
 				current.get().socket().close();
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 		}
 		try {
 			InputStream in = current.get().result().getInputStream(targetPort);
 			in.close();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 		}
 		try {
 			OutputStream out = current.get().result().getOutboundStream(targetPort);
 			out.close();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 		}
 		try {
 			Field field = ReflectionUtils.findField(PortForwardResult.class, "handler");
 			field.setAccessible(true);
 			WebSocketStreamHandler handler = (WebSocketStreamHandler) field.get(current.get().result());
 			handler.close();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 		}
 		current.set(null);
 	}

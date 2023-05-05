@@ -8,7 +8,8 @@ import io.kubernetes.client.openapi.models.V1OwnerReference;
 public record StrippedSourceContainer(V1ObjectMeta meta, Map<String, String> data) {
 
 	public V1OwnerReference owner() {
-		return meta.getOwnerReferences() != null && meta.getOwnerReferences().isEmpty() ? meta.getOwnerReferences().get(0) : null;
+		return meta.getOwnerReferences() != null && meta.getOwnerReferences().isEmpty()
+				? meta.getOwnerReferences().get(0) : null;
 	}
 
 	public String name() {

@@ -15,6 +15,7 @@ import io.kubernetes.client.openapi.models.V1Secret;
 public class SecretsBindings {
 
 	private final ConfigurableBootstrapContext context;
+
 	private final String namespace;
 
 	public SecretsBindings(ConfigurableBootstrapContext context, String namespace) {
@@ -36,8 +37,8 @@ public class SecretsBindings {
 class KubernetesClientSecretsCache {
 
 	/**
-	 * at the moment our loading of config maps is using a single thread, but might
-	 * change in the future, thus a thread safe structure.
+	 * at the moment our loading of config maps is using a single thread, but might change
+	 * in the future, thus a thread safe structure.
 	 */
 	private static final ConcurrentHashMap<String, List<StrippedSourceContainer>> CACHE = new ConcurrentHashMap<>();
 
@@ -47,7 +48,8 @@ class KubernetesClientSecretsCache {
 				return strippedSecrets(coreV1Api
 						.listNamespacedSecret(namespace, null, null, null, null, null, null, null, null, null, null)
 						.getItems());
-			} catch (ApiException apiException) {
+			}
+			catch (ApiException apiException) {
 				throw new RuntimeException(apiException.getResponseBody(), apiException);
 			}
 		});
@@ -55,7 +57,9 @@ class KubernetesClientSecretsCache {
 	}
 
 	private static List<StrippedSourceContainer> strippedSecrets(List<V1Secret> secrets) {
-		return secrets.stream().map(secret -> new StrippedSourceContainer(secret.getMetadata(), transform(secret.getData()))).collect(Collectors.toList());
+		return secrets.stream()
+				.map(secret -> new StrippedSourceContainer(secret.getMetadata(), transform(secret.getData())))
+				.collect(Collectors.toList());
 	}
 
 	private static Map<String, String> transform(Map<String, byte[]> in) {

@@ -26,9 +26,10 @@ public class ClientUtilsTests {
 	@Test
 	public void testKubeConfig() {
 		KubeConfig config = new KubeConfig(
-				new ArrayList<>(Arrays.asList(Map.of("name", "bar", "context", Map.of("namespace", "foo")))), new ArrayList<>(),
-				new ArrayList<>());
+				new ArrayList<>(Arrays.asList(Map.of("name", "bar", "context", Map.of("namespace", "foo")))),
+				new ArrayList<>(), new ArrayList<>());
 		config.setContext("bar");
 		assertThat(config.getNamespace()).isEqualTo("foo");
 	}
+
 }

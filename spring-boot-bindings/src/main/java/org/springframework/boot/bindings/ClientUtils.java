@@ -13,8 +13,11 @@ import io.kubernetes.client.util.KubeConfig;
 public class ClientUtils {
 
 	private static final String ENV_HOME = "HOME";
+
 	private static final String KUBEDIR = ".kube";
+
 	private static final String KUBECONFIG = "config";
+
 	private static final String ENV_KUBECONFIG = "KUBECONFIG";
 
 	static ApiClient kubernetesApiClient() {
@@ -22,11 +25,13 @@ public class ClientUtils {
 			// Assume we are running in a cluster
 			ApiClient apiClient = ClientBuilder.cluster().build();
 			return apiClient;
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			try {
 				ApiClient apiClient = ClientBuilder.defaultClient();
 				return apiClient;
-			} catch (Exception e1) {
+			}
+			catch (Exception e1) {
 				return new ClientBuilder().build();
 			}
 		}
@@ -44,7 +49,8 @@ public class ClientUtils {
 					return kubeConfig;
 				}
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 		}
 		KubeConfig config = defaultConfig();
 
@@ -53,10 +59,8 @@ public class ClientUtils {
 
 	static KubeConfig defaultConfig() {
 		KubeConfig config = new KubeConfig(
-				new ArrayList<>(Arrays.asList(Map.of("name", "context", "context",
-						Map.of("namespace", "default")))),
-				new ArrayList<>(),
-				new ArrayList<>());
+				new ArrayList<>(Arrays.asList(Map.of("name", "context", "context", Map.of("namespace", "default")))),
+				new ArrayList<>(), new ArrayList<>());
 		config.setContext("context");
 		return config;
 	}
@@ -71,12 +75,14 @@ public class ClientUtils {
 		final File kubeConfig = new File(kubeConfigPath);
 		if (kubeConfig.exists()) {
 			return kubeConfig;
-		} else {
+		}
+		else {
 			return null;
 		}
 	}
 
 	private static class KubeConfigEnvParser {
+
 		private String parseKubeConfigPath(String kubeConfigEnv) {
 			if (kubeConfigEnv == null) {
 				return null;
@@ -87,6 +93,7 @@ public class ClientUtils {
 
 			return kubeConfigPath;
 		}
+
 	}
 
 	private static File findHomeDir() {
@@ -100,10 +107,7 @@ public class ClientUtils {
 		if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
 			String homeDrive = System.getenv("HOMEDRIVE");
 			String homePath = System.getenv("HOMEPATH");
-			if (homeDrive != null
-					&& homeDrive.length() > 0
-					&& homePath != null
-					&& homePath.length() > 0) {
+			if (homeDrive != null && homeDrive.length() > 0 && homePath != null && homePath.length() > 0) {
 				File homeDir = new File(new File(homeDrive), homePath);
 				if (homeDir.exists()) {
 					return homeDir;
@@ -130,4 +134,5 @@ public class ClientUtils {
 		}
 		return null;
 	}
+
 }

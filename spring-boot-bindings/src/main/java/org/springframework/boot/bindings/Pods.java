@@ -21,8 +21,8 @@ public class Pods {
 	}
 
 	public V1Pod byName(String namespace, String name) throws ApiException {
-		List<V1Pod> items = api.listNamespacedPod(namespace, null, null, null, null, null, null, null, null,
-				null, null).getItems();
+		List<V1Pod> items = api.listNamespacedPod(namespace, null, null, null, null, null, null, null, null, null, null)
+				.getItems();
 		return items.isEmpty() ? null : items.get(0);
 	}
 

@@ -38,8 +38,10 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 	}
 
 	@Override
-	public void environmentPrepared(ConfigurableBootstrapContext context,
-			ConfigurableEnvironment environment) {
+	public void environmentPrepared(ConfigurableBootstrapContext context, ConfigurableEnvironment environment) {
+		if (!Binder.get(environment).bind("spring.service-bindings.enabled", Boolean.class).orElse(false)) {
+			return;
+		}
 		List<BindingsPropertiesProcessor> processors = SpringFactoriesLoader
 				.loadFactories(BindingsPropertiesProcessor.class, getClass().getClassLoader());
 		context.registerIfAbsent(ApiClient.class, InstanceSupplier.from(ClientUtils::kubernetesApiClient));
@@ -51,18 +53,16 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 		}
 		SpringApplication.getShutdownHandlers()
 				.add(() -> context.get(ApiClient.class).getHttpClient().dispatcher().executorService().shutdown());
-		new AwkwardEnvironmentPostProcessor(new Bindings(bindings), processors).postProcessEnvironment(environment, application);
+		new AwkwardEnvironmentPostProcessor(new Bindings(bindings), processors).postProcessEnvironment(environment,
+				application);
 	}
 
 	private static String namespace(Environment environment) {
 		KubeConfig config = ClientUtils.config();
 		String namespace = config == null ? "default"
 				: (config.getNamespace() == null ? "default" : config.getNamespace());
-		return Binder.get(environment)
-				.bind("spring.cloud.kubernetes.client.namespace", String.class)
-				.orElse(Binder.get(environment)
-						.bind("pod.namespace", String.class)
-						.orElse(namespace));
+		return Binder.get(environment).bind("spring.cloud.kubernetes.client.namespace", String.class)
+				.orElse(Binder.get(environment).bind("pod.namespace", String.class).orElse(namespace));
 	}
 
 	private Binding[] bindings(ConfigurableBootstrapContext context, ConfigurableEnvironment environment) {
@@ -77,7 +77,8 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 				if (binding != null) {
 					if (source.owner() != null) {
 						dict.computeIfAbsent(source.owner(), owner -> new ArrayList<>()).add(source);
-					} else {
+					}
+					else {
 						bindings.add(source);
 					}
 				}
@@ -97,7 +98,7 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 	}
 
 	private StrippedSourceContainer locate(List<StrippedSourceContainer> list) {
-		if (list.size()==1) {
+		if (list.size() == 1) {
 			return list.get(0);
 		}
 		// reverse order of version
@@ -124,7 +125,8 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 					InetAddress.getByName(host);
 					// If it's resolvable it must be OK not to forward
 					return binding;
-				} catch (UnknownHostException e) {	
+				}
+				catch (UnknownHostException e) {
 					String[] tokens = host.split("\\.");
 					if (tokens.length > 1) {
 						namespace = tokens[1];
@@ -136,7 +138,7 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 			Pods pods = new Pods(context.get(CoreV1Api.class));
 			try {
 				V1Pod pod = pods.forService(namespace, host).get(0);
-				if (pod==null) {
+				if (pod == null) {
 					// can't find pod
 					return binding;
 				}
@@ -149,7 +151,8 @@ public class BindingsSpringApplicationRunListener implements SpringApplicationRu
 					secret.put("provider", binding.getProvider());
 				}
 				binding = new Binding(binding.getName(), binding.getPath(), secret);
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 			}
 		}
 		return binding;
